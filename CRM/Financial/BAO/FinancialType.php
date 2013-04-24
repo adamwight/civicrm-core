@@ -121,33 +121,8 @@ class CRM_Financial_BAO_FinancialType extends CRM_Financial_DAO_FinancialType {
     $check = false;
 
     // ensure that we have no objects that have an FK to this financial type id that cannot be null
-    $tables =
-      array(
-        array(
-          'table'  => 'civicrm_contribution',
-          'column' => 'financial_type_id'
-        ),
-        array(
-          'table'  => 'civicrm_contribution_page',
-          'column' => 'financial_type_id'
-        ),
-        array(
-          'table'  => 'civicrm_contribution_recur',
-          'column' => 'financial_type_id'
-        ),
-        array(
-          'table'  => 'civicrm_membership_type',
-          'column' => 'financial_type_id'
-        ),
-        array(
-          'table'  => 'civicrm_pledge',
-          'column' => 'financial_type_id',
-        ),
-      );
-
     $errors = array();
-    $params = array( 1 => array($financialTypeId, 'Integer'));
-    if (CRM_Core_DAO::doesValueExistInTable( $tables, $params, $errors)) {
+    if (CRM_Core_DAO::doesValueExistInTable(self::getTableName(), $financialTypeId, $errors)) {
       $message  = ts('The following tables have an entry for this financial type') . ': ';
       $message .= implode( ', ', array_keys($errors));
 

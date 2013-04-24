@@ -190,8 +190,8 @@ class CRM_Core_DAO extends DB_DataObject {
    * @access protected
    */
   function initialize() {
-    $links = $this->links();
-    if (empty($links)) {
+    $links = static::getReferences();
+    if (!$links) {
       return;
     }
 
@@ -240,12 +240,13 @@ class CRM_Core_DAO extends DB_DataObject {
   /**
    * returns list of FK relationships
    *
+   * @static
    * @access public
    *
    * @return array
    */
-  function links() {
-    return NULL;
+  static function getReferences() {
+    return array();
   }
 
   /**
@@ -273,8 +274,7 @@ class CRM_Core_DAO extends DB_DataObject {
       }
     }
 
-    // set the links
-    $this->links();
+    self::getReferences();
 
     return $table;
   }
@@ -1693,24 +1693,72 @@ SELECT contact_id
    * This is typically used when we want to delete a row, but want to avoid the FK errors
    * that it might cause due to this being a required FK
    *
-   * @param array an array of values (tableName, columnName)
-   * @param array the parameter array with the value and type
-   * @param array (reference) the tables which had an entry for this value
+   * @param array $tableName the target tablename
+   * @param string $value the value being searched for
+   * @param &array $occurrences the tables which had an entry for this value
    *
-   * @return boolean true if no value exists in all the tables
+   * @return boolean true if no references are found
    * @static
    */
-  public static function doesValueExistInTable(&$tables, $params, &$errors) {
-    $errors = array();
-    foreach ($tables as $table) {
-      $sql = "SELECT count(*) FROM {$table['table']} WHERE {$table['column']} = %1";
+  public static function doesValueExistInTable($tableName, $value, &$occurrences) {
+    $references = CRM_Core_DAO::getReferencesToTable($tableName);
+
+    $occurrences = array();
+    foreach ($references as $table) {
+      $params = array(1 => array($value, 'String'));
+      $sql = "SELECT COUNT(*) FROM {$table['table']} WHERE {$table['column']} = %1";
+      if (isset($table['typeColumn'])) {
+        $params[2] = array($tableName, 'String');
+        $sql .= " AND {$table['typeColumn']} = %2";
+      }
       $count = self::singleValueQuery($sql, $params);
       if ($count > 0) {
-        $errors[$table['table']] = $count;
+        $occurrences[$table['table']] = $count;
       }
     }
 
-    return (empty($errors)) ? FALSE : TRUE;
+    return (empty($occurrences)) ? FALSE : TRUE;
+  }
+
+  /**
+   * List all tables which have hard foreign keys to this table.
+   *
+   * For now, this returns a description of every entity_id/entity_table
+   * reference.
+   * TODO: filter dynamic entity references on the $tableName, based on
+   * schema metadata in dynamicForeignKey which enumerates a restricted
+   * set of possible entity_table's.
+   *
+   * @param string $tableName table referred to
+   *
+   * @return array structure of table and column, listing every table with a
+   * foreign key reference to $tableName, and the column where the key appears.
+   */
+  public static function getReferencesToTable($tableName) {
+    require_once 'CRM/Core/DAO/listAll.php';
+    $refsFound = array();
+    foreach (array_values($dao) as $daoClassName) {
+      $links = $daoClassName::getReferences();
+      $daoTableName = $daoClassName::getTableName();
+
+      if ($links) {
+        foreach ($links as $refSpec) {
+          if (CRM_Utils_Array::value('foreignTable', $refSpec) === $tableName) {
+            $refsFound[] = array(
+              'table' => $daoTableName,
+              'column' => $refSpec['column'],
+            );
+          } elseif (CRM_Utils_Array::value('typeColumn', $refSpec)) {
+            $refsFound[] = array(
+              'table' => $daoTableName,
+              'column' => $refSpec['column'],
+              'typeColumn' => $refSpec['typeColumn'],
+            );
+          }
+        }
+      }
+    }
+    return $refsFound;
   }
 
   /**
