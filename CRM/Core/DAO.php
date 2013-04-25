@@ -190,20 +190,7 @@ class CRM_Core_DAO extends DB_DataObject {
    * @access protected
    */
   function initialize() {
-    $links = static::getReferences();
-    if (!$links) {
-      return;
-    }
-
     $this->_connect();
-
-    if (!isset($GLOBALS['_DB_DATAOBJECT']['LINKS'][$this->_database])) {
-      $GLOBALS['_DB_DATAOBJECT']['LINKS'][$this->_database] = array();
-    }
-
-    if (!array_key_exists($this->__table, $GLOBALS['_DB_DATAOBJECT']['LINKS'][$this->_database])) {
-      $GLOBALS['_DB_DATAOBJECT']['LINKS'][$this->_database][$this->__table] = $links;
-    }
   }
 
   /**
@@ -273,8 +260,6 @@ class CRM_Core_DAO extends DB_DataObject {
         }
       }
     }
-
-    self::getReferences();
 
     return $table;
   }
@@ -1687,37 +1672,37 @@ SELECT contact_id
   }
 
   /**
-   * Check the tables sent in, to see if there are any tables where there is a value for
-   * a column
+   * Find all records which refer to this entity.
    *
-   * This is typically used when we want to delete a row, but want to avoid the FK errors
-   * that it might cause due to this being a required FK
-   *
-   * @param array $tableName the target tablename
-   * @param string $value the value being searched for
-   * @param &array $occurrences the tables which had an entry for this value
-   *
-   * @return boolean true if no references are found
-   * @static
+   * @return array of objects referencing this
    */
-  public static function doesValueExistInTable($tableName, $value, &$occurrences) {
-    $references = CRM_Core_DAO::getReferencesToTable($tableName);
+  function findReferences() {
+    $links = self::getReferencesToTable(static::getTableName());
 
     $occurrences = array();
-    foreach ($references as $table) {
-      $params = array(1 => array($value, 'String'));
-      $sql = "SELECT COUNT(*) FROM {$table['table']} WHERE {$table['column']} = %1";
-      if (isset($table['typeColumn'])) {
-        $params[2] = array($tableName, 'String');
-        $sql .= " AND {$table['typeColumn']} = %2";
+    foreach ($links as $refSpec) {
+      $refColumn = $refSpec->getReferenceKey();
+      $targetColumn = $refSpec->getTargetKey();
+      $params = array(1 => array($this->$targetColumn, 'String'));
+      $sql = <<<EOS
+SELECT id
+FROM {$refSpec->getReferenceTable()}
+WHERE {$refColumn} = %1
+EOS;
+      if ($refSpec->isGeneric()) {
+        $params[2] = array(static::getTableName(), 'String');
+        $sql .= <<<EOS
+    AND {$refSpec->getTypeColumn()} = %2
+EOS;
       }
-      $count = self::singleValueQuery($sql, $params);
-      if ($count > 0) {
-        $occurrences[$table['table']] = $count;
+      $daoName = CRM_Core_BAO_AllCoreTables::getClassForTable($refSpec->getReferenceTable());
+      $result = self::executeQuery($sql, $params, TRUE, $daoName);
+      while ($result->fetch()) {
+        $occurrences[] = $result;
       }
     }
 
-    return (empty($occurrences)) ? FALSE : TRUE;
+    return $occurrences;
   }
 
   /**
@@ -1734,27 +1719,17 @@ SELECT contact_id
    * @return array structure of table and column, listing every table with a
    * foreign key reference to $tableName, and the column where the key appears.
    */
-  public static function getReferencesToTable($tableName) {
-    require_once 'CRM/Core/DAO/listAll.php';
+  static function getReferencesToTable($tableName) {
     $refsFound = array();
-    foreach (array_values($dao) as $daoClassName) {
+    foreach (CRM_Core_BAO_AllCoreTables::getClasses() as $daoClassName) {
       $links = $daoClassName::getReferences();
       $daoTableName = $daoClassName::getTableName();
 
-      if ($links) {
-        foreach ($links as $refSpec) {
-          if (CRM_Utils_Array::value('foreignTable', $refSpec) === $tableName) {
-            $refsFound[] = array(
-              'table' => $daoTableName,
-              'column' => $refSpec['column'],
-            );
-          } elseif (CRM_Utils_Array::value('typeColumn', $refSpec)) {
-            $refsFound[] = array(
-              'table' => $daoTableName,
-              'column' => $refSpec['column'],
-              'typeColumn' => $refSpec['typeColumn'],
-            );
-          }
+      foreach ($links as $refSpec) {
+        if ($refSpec->getTargetTable() === $tableName
+              or $refSpec->isGeneric()
+        ) {
+          $refsFound[] = $refSpec;
         }
       }
     }
