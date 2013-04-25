@@ -169,11 +169,11 @@ class CRM_Dedupe_Merger {
     $groups = array();
 
     $relTables = self::relTables();
-    $cidRefs = self::cidRefs();
-    $eidRefs = self::eidRefs();
+    $cidRefs = self::contactIdRefs();
     foreach ($relTables as $group => $params) {
       $sqls = array();
       foreach ($params['tables'] as $table) {
+        //XXX
         if (isset($cidRefs[$table])) {
           foreach ($cidRefs[$table] as $field) {
             $sqls[] = "SELECT COUNT(*) AS count FROM $table WHERE $field = $cid";
@@ -200,39 +200,7 @@ class CRM_Dedupe_Merger {
   static function cidRefs() {
     static $cidRefs;
     if (!$cidRefs) {
-      // FIXME: this should be generated dynamically from the schema's
-      // foreign keys referencing civicrm_contact(id)
-      $cidRefs = array(
-        'civicrm_acl_cache' => array('contact_id'),
-        'civicrm_activity' => array('source_contact_id'),
-        'civicrm_activity_contact' => array('contact_id'),
-        'civicrm_case_contact' => array('contact_id'),
-        'civicrm_contact' => array('primary_contact_id'),
-        'civicrm_contribution' => array('contact_id', 'honor_contact_id'),
-        'civicrm_contribution_page' => array('created_id'),
-        'civicrm_contribution_recur' => array('contact_id'),
-        'civicrm_contribution_soft' => array('contact_id'),
-        'civicrm_custom_group' => array('created_id'),
-        'civicrm_entity_tag' => array('entity_id'),
-        'civicrm_event' => array('created_id'),
-        'civicrm_grant' => array('contact_id'),
-        'civicrm_group_contact' => array('contact_id'),
-        'civicrm_group_organization' => array('organization_id'),
-        'civicrm_log' => array('modified_id'),
-        'civicrm_mailing' => array('created_id', 'scheduled_id'),
-        'civicrm_mailing_event_queue' => array('contact_id'),
-        'civicrm_mailing_event_subscribe' => array('contact_id'),
-        'civicrm_membership' => array('contact_id'),
-        'civicrm_membership_log' => array('modified_id'),
-        'civicrm_membership_type' => array('member_of_contact_id'),
-        'civicrm_note' => array('contact_id'),
-        'civicrm_participant' => array('contact_id'),
-        'civicrm_pcp' => array('contact_id'),
-        'civicrm_relationship' => array('contact_id_a', 'contact_id_b'),
-        'civicrm_uf_match' => array('contact_id'),
-        'civicrm_uf_group' => array('created_id'),
-        'civicrm_pledge' => array('contact_id'),
-      );
+      $cidRefs = CRM_Core_DAO::getReferencesToTable(CRM_Contact_DAO_Contact::getTableName());
 
       // Add ContactReference custom fields CRM-9561
       $sql = "SELECT cg.table_name, cf.column_name
@@ -240,40 +208,30 @@ class CRM_Dedupe_Merger {
               WHERE cg.id = cf.custom_group_id AND cf.data_type = 'ContactReference'";
       $dao = CRM_Core_DAO::executeQuery($sql);
       while ($dao->fetch()) {
-        $cidRefs[$dao->table_name][] = $dao->column_name;
+        $cidRefs[] = array(
+          'table' => $dao->table_name,
+          'column' => $dao->column_name,
+        );
+      }
+      $dao->free();
+
+      // Add entity reference fields
+      $sql = "SELECT cg.table_name, cf.column_name
+              FROM civicrm_custom_group cg, civicrm_custom_field cf
+              WHERE cg.id = cf.custom_group_id AND cf.data_type = 'ContactReference'";
+      $dao = CRM_Core_DAO::executeQuery($sql);
+      while ($dao->fetch()) {
+        $cidRefs[] = array(
+          'table' => $dao->table_name,
+          'column' => $dao->column_name,
+        );
       }
       $dao->free();
 
       // Allow hook_civicrm_merge() to adjust $cidRefs
-      CRM_Utils_Hook::merge('cidRefs', $cidRefs);
+      CRM_Utils_Hook::merge('contactIdRefs', $cidRefs);
     }
     return $cidRefs;
-  }
-
-  /**
-   * Return tables and their fields referencing civicrm_contact.contact_id with entity_id
-   */
-  static function eidRefs() {
-    static $eidRefs;
-    if (!$eidRefs) {
-      // FIXME: this should be generated dynamically from the schema
-      // tables that reference contacts with entity_{id,table}
-      $eidRefs = array(
-        'civicrm_acl' => array('entity_table' => 'entity_id'),
-        'civicrm_acl_entity_role' => array('entity_table' => 'entity_id'),
-        'civicrm_entity_file' => array('entity_table' => 'entity_id'),
-        'civicrm_log' => array('entity_table' => 'entity_id'),
-        'civicrm_mailing_group' => array('entity_table' => 'entity_id'),
-        'civicrm_note' => array('entity_table' => 'entity_id'),
-        'civicrm_project' => array('owner_entity_table' => 'owner_entity_id'),
-        'civicrm_task' => array('owner_entity_table' => 'owner_entity_id'),
-        'civicrm_task_status' => array('responsible_entity_table' => 'responsible_entity_id', 'target_entity_table' => 'target_entity_id'),
-      );
-
-      // Allow hook_civicrm_merge() to adjust $eidRefs
-      CRM_Utils_Hook::merge('eidRefs', $eidRefs);
-    }
-    return $eidRefs;
   }
 
   /**
