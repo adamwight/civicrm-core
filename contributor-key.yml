@@ -1,0 +1,250 @@
+# This is a key of GitHub handles to real contributors' names and organizations,
+# to be used for preparing credits for release notes.
+---
+- github      : adixon
+  name        : Alan Dixon
+  organization: Blackfly Solutions
+- github      : agh1
+  name        : Andrew Hunt
+  organization: AGH Strategies
+- github      : agileware
+  name        : Agileware Team
+  organization: Agileware
+  jira        : agileware
+- github      : alifrumin
+  name        : Alice Frumin
+  organization: AGH Strategies
+- github      : andrew-cormick-dockery
+  name        : Andrew Cormick-Dockery
+  jira        : andrew_dockery
+- github      : artem3
+  name        : Artem Goncharenko
+- github      : bhahumanists
+  name        : Andrew West
+  organization: British Humanist Association
+  jira        : awestbha
+- github      : bsilvern
+  name        : Bob Silvern
+  jira        : bobs0
+- github      : coldrunKacper
+  name        : Kacper Warda
+  jira        : coldrunKacper
+- github      : colemanw
+  name        : Coleman Watts
+  organization: CiviCRM
+  jira        : colemanw
+- name        : Daniel Martinez
+  jira        : danielmart
+- github      : davecivicrm
+  name        : Dave Greenberg
+  organization: CiviCRM
+  jira        : dgg
+- github      : davejenx
+  name        : Dave Jenkins
+  organization: Circle Interactive
+  jira        : davej
+- name        : David Tarrant
+  organization: Nubay Services
+  jira        : dtarrant
+- github      : edzelopez
+  name        : Edsel Lopez
+  organization: JMA Consulting
+  jira        : edsel
+- github      : eileenmcnaughton
+  name        : Eileen McNaughton
+  organization: Fuzion
+  jira        : eileen
+- github      : francescbassas
+  name        : Francesc Bassas i Bullich
+  jira        : francescbassas
+- github      : galgeek
+  name        : Barbara Miller
+  jira        : galgeek
+- github      : garethdylan361
+  name        : Gareth Small
+  jira        : garethsmall361@gmail.com
+- github      : gemmapotaka
+  name        : Gemma Potaka
+  organization: Fuzion
+- github      : ginkgofjg
+  name        : Frank Gómez
+  organization: Ginkgo Street Labs
+- github      : ginkgomzd
+  name        : Michael Z Daryabeygi
+  organization: Ginkgo Street Labs
+- github      : ineffyble
+  name        : Effy Elden
+- github      : jernic
+  name        : jernic
+- github      : jitendrapurohit
+  name        : Jitendra Purohit
+  organization: CiviCRM
+  jira        : jitendra.purohit
+- github      : jmcclelland
+  name        : Jamie McClelland
+  organization: Progressive Technology Project
+  jira        : jamie
+- github      : JKingsnorth
+  name        : John Kingsnorth
+  jira        : john
+- github      : JoeMurray
+  name        : Joe Murray
+  organization: JMA Consulting
+- github      : johanv
+  name        : Johan Vervloet
+- github      : JohnFF
+  name        : John Kirk
+  organization: CiviFirst
+- name        : Jon-man Cheung
+  organization: GMCVO Databases
+  jira        : jon-man
+- github      : joshgowans
+  name        : Josh Gowans
+  organization: CiviCRM
+  jira        : jgowans
+- github      : Kajakaran
+  name        : Kajakaran Balakrishnan
+  organization: Veda Consulting
+  jira        : kajan
+- github      : KarinG
+  name        : Karin Gerritsen
+  organization: Semper IT
+- github      : konadave
+  name        : David Reedy Jr
+  organization: Klangsoft
+- github      : lcdservices
+  name        : Brian Shaughnessy
+  organization: Lighthouse Design and Consulting
+  jira        : lcdweb
+- github      : liedekef
+  name        : Franky Van Liedekerke
+  organization: E-Dynamics
+  jira        : liedekef
+- github      : litespeedmarc
+  name        : Marc Brazeau
+- name        : Lola Slade
+  organization: Freeform Solutions
+  jira        : lola_slade
+- github      : magnolia61
+  name        : Richard van Oosterhout
+  jira        : magnolia61
+- github      : michaelmcandrew
+  name        : Michael McAndrew
+  organization: Third Sector Design
+- github      : mi-kon
+  name        : Mike Kondrashin
+  organization: CompuCorp
+- github      : MiltoxBeyond
+  name        : Milton Zurita
+  jira        : MiltoxB
+- github      : MiyaNoctem
+  name        : Camilo Rodriguez
+  organization: CompuCorp
+- github      : mlutfy
+  name        : Mathieu Lutfy
+  organization: Coop SymbioTIC
+  jira        : mlutfy
+- github      : mollux
+  name        : Mattias Michaux
+- github      : monishdeb
+  name        : Monish Deb
+  organization: CiviCRM
+  jira        : monish.deb
+- github      : nganivet
+  name        : Nicolas Ganivet
+  organization: CiviDesk
+  jira        : nganivet
+- name        : Dennis Gray
+  jira        : ozyank
+- github      : PalanteJon
+  name        : Jon Goldberg
+  organization: JMA Consulting
+  jira        : palantejon
+- github      : petednz
+  name        : Peter Davis
+  organization: Fuzion
+  jira        : petednz
+- name        : Peter Davis
+  organization: Fuzion
+  jira        : peted
+- github      : pradpnayak
+  name        : Pradeep Nayak
+  organization: JMA Consulting
+  jira        : pradeep.nayak
+- name        : Lutz Frommberger
+  jira        : re-quest
+- github      : rubofvil
+  name        : Rubén Pineda
+  organization: iXiam
+- github      : samuelsov
+  name        : Samuel Vanhove
+  organization: Coop SymbioTIC
+- github      : saurabhbatra96
+  name        : Saurabh Batra
+- github      : scardinius
+  name        : Tomasz Pietrzkowski
+  organization: We Move Europe/Caltha
+- github      : seamuslee001
+  name        : Seamus Lee
+  organization: Australian Greens
+  jira        : seamuslee
+- github      : sharique
+  name        : Sharique Ahmed Farooqui
+  jira        : sharique
+- github      : sqweets
+  name        : Ellen Hendricks
+  organization: Spry Digital
+- github      : stevekessler
+  name        : Steve Kessler
+  organization: Denver DataMan
+  jira        : Skessler
+- github      : stoob
+  name        : Stuart Gaston
+  organization: Korlon
+  jira        : stoob
+- github      : sunilpawar
+  name        : Sunil Pawar
+  organization: CiviDesk
+  jira        : sunil
+- github      : systopia
+  name        : Björn Endres
+  organization: Systopia
+- name        : Thomas Nilefalk
+  jira        : thoni56
+- github      : tobiaslounsbury
+  name        : Tobias Lounsbury
+  organization: Ginkgo Street Labs
+- github      : totten
+  name        : Tim Otten
+  organization: CiviCRM
+  jira        : timotten
+- github      : tschuettler
+  name        : Thomas Schüttler
+- github      : twomice
+  name        : Allen Shaw
+  organization: Joinery
+  jira        : allenshaw
+- name        : Vakees K
+  jira        : vakeesan26
+- github      : VangelisP
+  name        : Vangelis Pantazis
+  organization: iXiam
+  jira        : VangelisP
+- github      : vedantrathore
+  name        : Vedant Rathore
+- github      : Vgratioulet
+  name        : Véronique Gratioulet
+- name        : William Gordon
+  organization: British Humanist Association
+  jira        : wdgordon
+- github      : wmortada
+  name        : William Mortada
+  organization: Community IT Academy
+- github      : xurizaemon
+  name        : Chris Burgess
+  organization: Fuzion
+  jira        : xurizaemon
+- github      : yashodha
+  name        : Yashodha Chaku
+  organization: CiviCRM
+  jira        : yashodha

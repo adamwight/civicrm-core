@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.5                                                |
+ | CiviCRM version 4.7                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2014                                |
+ | Copyright CiviCRM LLC (c) 2004-2017                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -22,16 +22,20 @@
  | GNU Affero General Public License or the licensing of CiviCRM,     |
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
-*/
+ */
 
 require_once 'CiviTest/CiviSeleniumTestCase.php';
+
+/**
+ * Class WebTest_Grant_ContactContextAddTest
+ */
 class WebTest_Grant_ContactContextAddTest extends CiviSeleniumTestCase {
 
   protected function setUp() {
     parent::setUp();
   }
 
-  function testContactContextAddTest() {
+  public function testContactContextAddTest() {
     // Log in as admin first to verify permissions for CiviGrant
     $this->webtestLogin('admin');
 
@@ -57,7 +61,8 @@ class WebTest_Grant_ContactContextAddTest extends CiviSeleniumTestCase {
     $this->waitForElementPresent('crm-contact-actions-link');
 
     // now add grant from contact summary
-    $this->click("//a[@id='crm-contact-actions-link']/span/div");
+    $this->click("xpath=//div[@class='crm-actions-ribbon']/ul[@id='actions']/li[@class='crm-contact-activity crm-summary-block']/div/a[@id='crm-contact-actions-link']");
+    $this->waitForElementPresent('crm-contact-actions-list');
 
     // wait for add Grant link
     $this->waitForElementPresent('link=Add Grant');
@@ -65,7 +70,8 @@ class WebTest_Grant_ContactContextAddTest extends CiviSeleniumTestCase {
     $this->click('link=Add Grant');
 
     // wait for grant form to load completely
-    $this->waitForText('css=span.ui-dialog-title', "$firstName $lastName");
+    $this->waitForText('css=span.ui-dialog-title', "New Grant");
+    $this->waitForElementPresent('status_id');
 
     // check contact name on Grant form
 
@@ -90,13 +96,13 @@ class WebTest_Grant_ContactContextAddTest extends CiviSeleniumTestCase {
     // fill in decision Date
     $this->webtestFillDate('decision_date', 'now');
 
-    // fill in money transfered date
+    // fill in money transferred date
     $this->webtestFillDate('money_transfer_date', 'now');
 
     // fill in grant due Date
     $this->webtestFillDate('grant_due_date', 'now');
 
-    // check  grant report recieved.
+    // check  grant report received.
     $this->check('grant_report_received');
 
     // grant rationale
@@ -130,5 +136,5 @@ class WebTest_Grant_ContactContextAddTest extends CiviSeleniumTestCase {
       )
     );
   }
-}
 
+}

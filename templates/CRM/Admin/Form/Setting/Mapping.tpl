@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.5                                                |
+ | CiviCRM version 4.7                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2014                                |
+ | Copyright CiviCRM LLC (c) 2004-2017                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -24,7 +24,7 @@
  +--------------------------------------------------------------------+
 *}
 <div class="crm-block crm-form-block crm-map-form-block">
-<div id="help">
+<div class="help">
     {ts}CiviCRM includes plugins for several mapping and geocoding web services. When your users save a contact or event location address, a geocoding service will convert the address into geographical coordinates, which are required for mapping. Yahoo&rsquo;s geocoder will also automatically populate the postal code field. Mapping services allow your users to display addresses on a map.{/ts} {help id='map-intro-id'}
 </div>
     <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="top"}</div>
@@ -55,14 +55,16 @@
 {literal}
 <script type="text/javascript">
 CRM.$(function($) {
-  showHideMapAPIkey( cj('#mapProvider').val( ) );
-});
-function showHideMapAPIkey( mapProvider ) {
-  if ( mapProvider && ( mapProvider == 'OpenStreetMaps' ) ) {
-    cj('#Mapping tr.crm-map-form-block-mapAPIKey').hide( );
-  } else {
-    cj('#Mapping tr.crm-map-form-block-mapAPIKey').show( );
+  var $form = $('form.{/literal}{$form.formClass}{literal}');
+  function showHideMapAPIkey() {
+    var mapProvider = $(this).val();
+    if ( !mapProvider || ( mapProvider === 'OpenStreetMaps' ) ) {
+      $('tr.crm-map-form-block-mapAPIKey', $form).hide( );
+    } else {
+      $('tr.crm-map-form-block-mapAPIKey', $form).show( );
+    }
   }
-}
+  $('#mapProvider').each(showHideMapAPIkey).change(showHideMapAPIkey);
+});
 </script>
 {/literal}

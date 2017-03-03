@@ -2,11 +2,7 @@
 (function($, CRM) {
 
   function refresh(table) {
-    if (table) {
-      $(table).dataTable().fnDraw();
-    } else {
-      $('#crm-main-content-wrapper').crmSnippet('refresh');
-    }
+    $('#crm-main-content-wrapper').crmSnippet('refresh');
   }
 
   function open(url, options, table) {
@@ -37,7 +33,7 @@
   var miniForms = {
     '#manageTagsDialog': {
       post: function(data) {
-        var tagsChecked = $("#tags", this).select2('val').join(','),
+        var tagsChecked = $("#tags", this) ? $("#tags", this).val() : '',
           tagList = {},
           url = CRM.url('civicrm/case/ajax/processtags');
         $("input[name^=case_taglist]", this).each(function() {
@@ -70,12 +66,40 @@
     },
     '#addCaseRoleDialog': {
       pre: function() {
-        $('[name=role_type]', this).val('').change();
-        $('[name=add_role_contact_id]', this).val('').crmEntityRef({create: true, api: {params: {contact_type: 'Individual'}}});
+        var $contactField = $('[name=add_role_contact_id]', this);
+        $('[name=role_type]', this)
+          .off('.miniform')
+          .on('change.miniform', function() {
+            var val = $(this).val();
+            $contactField.val('').change().prop('disabled', !val);
+            if (val) {
+              var
+                pieces = val.split('_'),
+                rType = pieces[0],
+                target = pieces[2], // b or a
+                contact_type = CRM.vars.relationshipTypes[rType]['contact_type_' + target],
+                contact_sub_type = CRM.vars.relationshipTypes[rType]['contact_sub_type_' + target],
+                api = {params: {}};
+              if (contact_type) {
+                api.params.contact_type = contact_type;
+              }
+              if (contact_sub_type) {
+                api.params.contact_sub_type = contact_sub_type;
+              }
+              $contactField
+                .data('api-params', api)
+                .data('user-filter', {})
+                .attr('placeholder', CRM.vars.relationshipTypes[rType]['placeholder_' + target])
+                .change();
+            }
+          })
+          .val('')
+          .change();
+        $contactField.val('').crmEntityRef({create: true, api: {params: {contact_type: 'Individual'}}});
       },
       post: function(data) {
-        var contactID = $('[name=add_role_contact_id]').val(),
-          relType = $('[name=role_type]').val();
+        var contactID = $('[name=add_role_contact_id]', this).val(),
+          relType = $('[name=role_type]', this).val();
         if (contactID && relType) {
           $.extend(data, {
             case_id: caseId(),
@@ -89,11 +113,15 @@
       }
     },
     '#editCaseRoleDialog': {
-      pre: function() {
-        $('[name=edit_role_contact_id]', this).val('').crmEntityRef({create: true, api: {params: {contact_type: 'Individual'}}});
+      pre: function(data) {
+        var params = {create: true};
+        if (data.contact_type) {
+          params.api = {params: {contact_type: data.contact_type}};
+        }
+        $('[name=edit_role_contact_id]', this).val('').crmEntityRef(params);
       },
       post: function(data) {
-        data.rel_contact = $('[name=edit_role_contact_id]').val();
+        data.rel_contact = $('[name=edit_role_contact_id]', this).val();
         if (data.rel_contact) {
           $.extend(data, {
             case_id: caseId(),
@@ -109,7 +137,7 @@
         $('[name=add_client_id]', this).val('').crmEntityRef({create: true});
       },
       post: function(data) {
-        data.contactID = $('[name=add_client_id]').val();
+        data.contactID = $('[name=add_client_id]', this).val();
         if (data.contactID) {
           data.caseID = caseId();
           return $.post(CRM.url('civicrm/case/ajax/addclient'), data);
@@ -119,12 +147,16 @@
     },
     '#addMembersToGroupDialog': {
       pre: function() {
-        $('[name=add_member_to_group_contact_id]', this).val('').crmEntityRef({create: true});
+        $('[name=add_member_to_group_contact_id]', this).val('').crmEntityRef({create: true, select: {multiple: true}});
       },
       post: function(data) {
-        data.contact_id = $('[name=add_member_to_group_contact_id]').val();
-        if (data.contact_id) {
-          return CRM.api3('group_contact', 'create', data);
+        var requests = [],
+          cids = $('[name=add_member_to_group_contact_id]', this).val();
+        if (cids) {
+          $.each(cids.split(','), function (k, cid) {
+            requests.push(['group_contact', 'create', $.extend({contact_id: cid}, data)]);
+          });
+          return CRM.api3(requests);
         }
         return false;
       }
@@ -183,7 +215,7 @@
           var submission = miniForms[target].post.call(dialog[0], $.extend({}, $el.data()));
           // Function should return a deferred object
           if (submission) {
-            dialog.parent().block();
+            dialog.block();
             submission.done(function(data) {
               dialog.dialog('close');
               var table = $el.closest('table.dataTable');
@@ -200,7 +232,7 @@
               if (!$(this).val()) {
                 $(this).crmError(ts('Please select a value'));
               }
-            })
+            });
           }
           return submission;
         }
@@ -208,7 +240,10 @@
           title: $(this).attr('title') || $(this).text(),
           message: detached[target],
           resizable: true,
-          open: miniForms[target].pre
+          options: {yes: ts('Save'), no: ts('Cancel')},
+          open: function() {
+            if (miniForms[target].pre) miniForms[target].pre.call(this, $el.data());
+          }
         })
           .on('dialogclose', function() {
             detached[target] = $(target, dialog).detach();
@@ -237,4 +272,4 @@
         }
       });
   });
-}(cj, CRM))
+}(cj, CRM));

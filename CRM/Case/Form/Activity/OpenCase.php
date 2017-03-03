@@ -1,9 +1,9 @@
 <?php
 /*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.5                                                |
+ | CiviCRM version 4.7                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2014                                |
+ | Copyright CiviCRM LLC (c) 2004-2017                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -23,31 +23,30 @@
  | GNU Affero General Public License or the licensing of CiviCRM,     |
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
-*/
+ */
 
 /**
  *
  * @package CRM
- * @copyright CiviCRM LLC (c) 2004-2014
- * $Id$
- *
+ * @copyright CiviCRM LLC (c) 2004-2017
  */
 
 /**
- * This class generates form components for OpenCase Activity
- *
+ * This class generates form components for OpenCase Activity.
  */
 class CRM_Case_Form_Activity_OpenCase {
 
   /**
-   * the id of the client associated with this case
+   * The id of the client associated with this case.
    *
    * @var int
-   * @public
    */
   public $_contactID;
 
-  static function preProcess(&$form) {
+  /**
+   * @param CRM_Core_Form $form
+   */
+  public static function preProcess(&$form) {
     //get multi client case configuration
     $xmlProcessorProcess = new CRM_Case_XMLProcessor_Process();
     $form->_allowMultiClient = (bool) $xmlProcessorProcess->getAllowMultipleCaseClients();
@@ -58,8 +57,9 @@ class CRM_Case_Form_Activity_OpenCase {
         'Change Case Start Date',
         'name'
       );
+      $caseId = CRM_Utils_Array::first($form->_caseId);
       $form->assign('changeStartURL', CRM_Utils_System::url('civicrm/case/activity',
-          "action=add&reset=1&cid=$contactID&caseid={$form->_caseId}&atype=$atype"
+          "action=add&reset=1&cid=$contactID&caseid={$caseId}&atype=$atype"
         )
       );
       return;
@@ -71,7 +71,7 @@ class CRM_Case_Form_Activity_OpenCase {
 
     // check if the case type id passed in url is a valid one
     $caseTypeId = CRM_Utils_Request::retrieve('ctype', 'Positive', $form);
-    $caseTypes = CRM_Case_PseudoConstant::caseType();
+    $caseTypes = CRM_Case_BAO_Case::buildOptions('case_type_id', 'create');
     $form->_caseTypeId = array_key_exists($caseTypeId, $caseTypes) ? $caseTypeId : NULL;
 
     // check if the case status id passed in url is a valid one
@@ -80,18 +80,19 @@ class CRM_Case_Form_Activity_OpenCase {
     $form->_caseStatusId = array_key_exists($caseStatusId, $caseStatus) ? $caseStatusId : NULL;
 
     // Add attachments
-    CRM_Core_BAO_File::buildAttachment( $form, 'civicrm_activity', $form->_activityId );
+    CRM_Core_BAO_File::buildAttachment($form, 'civicrm_activity', $form->_activityId);
+    $session = CRM_Core_Session::singleton();
+    $session->pushUserContext(CRM_Utils_System::url('civicrm/case', 'reset=1'));
   }
 
   /**
-   * This function sets the default values for the form. For edit/view mode
+   * Set default values for the form. For edit/view mode
    * the default values are retrieved from the database
    *
-   * @access public
    *
-   * @return void
+   * @param CRM_Core_Form $form
    */
-  static function setDefaultValues(&$form) {
+  public static function setDefaultValues(&$form) {
     $defaults = array();
     if ($form->_context == 'caseActivity') {
       return $defaults;
@@ -113,16 +114,17 @@ class CRM_Case_Form_Activity_OpenCase {
 
     // set default case type passed in url
     if ($form->_caseTypeId) {
-      $caseType = $form->_caseTypeId;
+      $defaults['case_type_id'] = $form->_caseTypeId;
     }
     else {
-      // set default case type if only one of it exists
-      $caseType = CRM_Core_OptionGroup::values('case_type', FALSE, FALSE, FALSE, 'AND is_default = 1');
-      if (count($caseType) == 1) {
-        $caseType = key($caseType);
+      // TODO: Not possible yet to set a default case type in the system
+      // For now just add the convenience of auto-selecting if there is only one option
+      $caseTypes = CRM_Case_BAO_Case::buildOptions('case_type_id', 'create');
+      if (count($caseTypes) == 1) {
+        reset($caseTypes);
+        $defaults['case_type_id'] = key($caseTypes);
       }
     }
-    $defaults['case_type_id'] = $caseType;
 
     $medium = CRM_Core_OptionGroup::values('encounter_medium', FALSE, FALSE, FALSE, 'AND is_default = 1');
     if (count($medium) == 1) {
@@ -145,29 +147,30 @@ class CRM_Case_Form_Activity_OpenCase {
   /**
    * @param CRM_Case_Form_Case $form
    */
-  static function buildQuickForm(&$form) {
+  public static function buildQuickForm(&$form) {
     if ($form->_context == 'caseActivity') {
       return;
     }
     if ($form->_context == 'standalone') {
-      $form->addEntityRef('client_id', ts('Client'), array('create' => TRUE, 'multiple' => $form->_allowMultiClient), TRUE);
+      $form->addEntityRef('client_id', ts('Client'), array(
+          'create' => TRUE,
+          'multiple' => $form->_allowMultiClient,
+        ), TRUE);
     }
 
-    $element = $form->addSelect(
-      'case_type_id',
-      array('onchange' => "CRM.buildCustomData('Case', this.value);"),
-      TRUE
-    );
-
+    $element = $form->addField('case_type_id', array(
+      'context' => 'create',
+      'entity' => 'Case',
+      'onchange' => "CRM.buildCustomData('Case', this.value);",
+    ), TRUE);
     if ($form->_caseTypeId) {
       $element->freeze();
     }
 
-    $csElement = $form->add('select', 'status_id', ts('Case Status'),
-      CRM_Case_PseudoConstant::caseStatus(),
-      FALSE
-    );
-
+    $csElement = $form->addField('status_id', array(
+      'context' => 'create',
+      'entity' => 'Case',
+    ), TRUE);
     if ($form->_caseStatusId) {
       $csElement->freeze();
     }
@@ -182,12 +185,12 @@ class CRM_Case_Form_Activity_OpenCase {
 
     $form->addDate('start_date', ts('Case Start Date'), TRUE, array('formatType' => 'activityDateTime'));
 
-    $form->addSelect('medium_id', array('entity' => 'activity'), TRUE);
+    $form->addField('medium_id', array('entity' => 'activity', 'context' => 'create'), TRUE);
 
     // calling this field activity_location to prevent conflict with contact location fields
     $form->add('text', 'activity_location', ts('Location'), CRM_Core_DAO::getAttribute('CRM_Activity_DAO_Activity', 'location'));
 
-    $form->addWysiwyg('activity_details', ts('Details'), array('rows' => 4, 'cols' => 60), FALSE);
+    $form->add('wysiwyg', 'activity_details', ts('Details'), array('rows' => 4, 'cols' => 60), FALSE);
 
     $form->addButtons(array(
         array(
@@ -209,13 +212,13 @@ class CRM_Case_Form_Activity_OpenCase {
   }
 
   /**
-   * Function to process the form
+   * Process the form submission.
    *
-   * @access public
    *
-   * @return void
+   * @param CRM_Core_Form $form
+   * @param array $params
    */
-  static function beginPostProcess(&$form, &$params) {
+  public static function beginPostProcess(&$form, &$params) {
     if ($form->_context == 'caseActivity') {
       return;
     }
@@ -247,15 +250,16 @@ class CRM_Case_Form_Activity_OpenCase {
   }
 
   /**
-   * global validation rules for the form
+   * Global validation rules for the form.
    *
-   * @param array $values posted values of the form
+   * @param $fields
+   * @param $files
+   * @param CRM_Core_Form $form
    *
-   * @return array list of errors to be posted back to the form
-   * @static
-   * @access public
+   * @return array
+   *   list of errors to be posted back to the form
    */
-  static function formRule($fields, $files, $form) {
+  public static function formRule($fields, $files, $form) {
     if ($form->_context == 'caseActivity') {
       return TRUE;
     }
@@ -265,13 +269,12 @@ class CRM_Case_Form_Activity_OpenCase {
   }
 
   /**
-   * Function to process the form
+   * Process the form submission.
    *
-   * @access public
-   *
-   * @return void
+   * @param CRM_Core_Form $form
+   * @param array $params
    */
-  static function endPostProcess(&$form, &$params) {
+  public static function endPostProcess(&$form, &$params) {
     if ($form->_context == 'caseActivity') {
       return;
     }
@@ -300,7 +303,7 @@ class CRM_Case_Form_Activity_OpenCase {
           'case_id' => $params['case_id'],
           'contact_id' => $cliId,
         );
-        CRM_Case_BAO_Case::addCaseToContact($contactParams);
+        CRM_Case_BAO_CaseContact::create($contactParams);
       }
     }
     else {
@@ -308,7 +311,7 @@ class CRM_Case_Form_Activity_OpenCase {
         'case_id' => $params['case_id'],
         'contact_id' => $form->_currentlyViewedContactId,
       );
-      CRM_Case_BAO_Case::addCaseToContact($contactParams);
+      CRM_Case_BAO_CaseContact::create($contactParams);
     }
 
     // 2. initiate xml processor
@@ -333,10 +336,10 @@ class CRM_Case_Form_Activity_OpenCase {
     }
 
     // Add parameters for attachments
-    $numAttachments = CRM_Core_BAO_Setting::getItem(CRM_Core_BAO_Setting::SYSTEM_PREFERENCES_NAME, 'max_attachments');
-    for ( $i = 1; $i <= $numAttachments; $i++ ) {
+    $numAttachments = Civi::settings()->get('max_attachments');
+    for ($i = 1; $i <= $numAttachments; $i++) {
       $attachName = "attachFile_$i";
-      if ( isset( $params[$attachName] ) && !empty( $params[$attachName] ) ) {
+      if (isset($params[$attachName]) && !empty($params[$attachName])) {
         $xmlProcessorParams[$attachName] = $params[$attachName];
       }
     }
@@ -351,15 +354,15 @@ class CRM_Case_Form_Activity_OpenCase {
     if ($buttonName == $form->getButtonName('upload', 'new')) {
       if ($form->_context == 'standalone') {
         $session->replaceUserContext(CRM_Utils_System::url('civicrm/case/add',
-            'reset=1&action=add&context=standalone'
-          ));
+          'reset=1&action=add&context=standalone'
+        ));
       }
       else {
         $session->replaceUserContext(CRM_Utils_System::url('civicrm/contact/view/case',
-            "reset=1&action=add&context=case&cid={$form->_contactID}"
-          ));
+          "reset=1&action=add&context=case&cid={$form->_contactID}"
+        ));
       }
     }
   }
-}
 
+}

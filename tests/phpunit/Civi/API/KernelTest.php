@@ -1,13 +1,12 @@
 <?php
 namespace Civi\API;
-use \Symfony\Component\EventDispatcher\EventDispatcher;
 
-require_once 'CiviTest/CiviUnitTestCase.php';
+use \Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  */
 class KernelTest extends \CiviUnitTestCase {
-  const MOCK_VERSION = 99;
+  const MOCK_VERSION = 3;
 
   /**
    * @var array(int => array('name' => string $eventName, 'type' => string $className))
@@ -32,7 +31,7 @@ class KernelTest extends \CiviUnitTestCase {
     $this->kernel = new Kernel($this->dispatcher);
   }
 
-  function testNormalEvents() {
+  public function testNormalEvents() {
     $this->kernel->registerApiProvider($this->createWidgetFrobnicateProvider());
     $result = $this->kernel->run('Widget', 'frobnicate', array(
       'version' => self::MOCK_VERSION,
@@ -48,12 +47,12 @@ class KernelTest extends \CiviUnitTestCase {
     $this->assertEquals('frob', $result['values'][98]);
   }
 
-  function testResolveException() {
+  public function testResolveException() {
     $test = $this;
     $this->dispatcher->addListener(Events::RESOLVE, function () {
       throw new \API_Exception('Oh My God', 'omg', array('the' => 'badzes'));
     }, Events::W_EARLY);
-    $this->dispatcher->addListener(Events::EXCEPTION, function(\Civi\API\Event\ExceptionEvent $event) use ($test) {
+    $this->dispatcher->addListener(Events::EXCEPTION, function (\Civi\API\Event\ExceptionEvent $event) use ($test) {
       $test->assertEquals('Oh My God', $event->getException()->getMessage());
     });
 
@@ -91,8 +90,9 @@ class KernelTest extends \CiviUnitTestCase {
    * Add listeners to $this->dispatcher which record each invocation of $monitoredEvents
    * in $this->actualEventSequence.
    *
-   * @param EventDispatcher $this->dispatcher
-   * @param array $monitoredEvents list of event names
+   * @param array $monitoredEvents
+   *   List of event names.
+   *
    */
   public function monitorEvents($monitoredEvents) {
     foreach ($monitoredEvents as $monitoredEvent) {
@@ -105,4 +105,5 @@ class KernelTest extends \CiviUnitTestCase {
       }, 2 * Events::W_EARLY);
     }
   }
+
 }

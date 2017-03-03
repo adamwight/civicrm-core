@@ -1,8 +1,8 @@
 {*
  +--------------------------------------------------------------------+
- | CiviCRM version 4.5                                                |
+ | CiviCRM version 4.7                                                |
  +--------------------------------------------------------------------+
- | Copyright CiviCRM LLC (c) 2004-2014                                |
+ | Copyright CiviCRM LLC (c) 2004-2017                                |
  +--------------------------------------------------------------------+
  | This file is a part of CiviCRM.                                    |
  |                                                                    |
@@ -37,6 +37,10 @@
     {if $smarty.get.snippet eq 2}
       {include file="CRM/common/print.tpl"}
     {else}
+      {crmRegion name='ajax-snippet'}{/crmRegion}
+
+      {crmRegion name='page-header' allowCmsOverride=0}{/crmRegion}
+
       {crmRegion name='page-body'}
 
         {* Add status messages and container-snippet div unless we are outputting json. *}
@@ -46,7 +50,6 @@
           {include file="CRM/common/status.tpl"}
         {/if}
 
-        <!-- .tpl file invoked: {$tplFile}. Call via form.tpl if we have a form in the page. -->
         {if !empty($isForm)}
           {include file="CRM/Form/default.tpl"}
         {else}
@@ -58,6 +61,8 @@
         {/if}
 
       {/crmRegion}
+
+      {crmRegion name='page-footer' allowCmsOverride=0}{/crmRegion}
     {/if}
   {/if}
 {/strip}
